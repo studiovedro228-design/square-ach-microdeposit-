@@ -1,70 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Bank Account – Micro-Deposit</title>
-  <style>
-    body{font-family:Arial;max-width:520px;margin:40px auto;padding:20px;background:#f9f9f9;line-height:1.6}
-    h2{color:#006241}
-    input,button{width:100%;padding:14px;margin:10px 0;font-size:16px;border-radius:6px;border:1px solid #ccc}
-    button{background:#006241;color:white;border:none;cursor:pointer;font-weight:bold}
-    button:disabled{background:#999;cursor:not-allowed}
-    .small{font-size:0.9em;color:#555;margin:20px 0}
-    #status{margin-top:20px;padding:15px;border-radius:6px;display:none;font-weight:bold}
-    .success{background:#d4edda;color:#155724}
-    .error{background:#f8d7da;color:#721c24}
-  </style>
-</head>
-<body>
-  <h2>Add Bank Account (Micro-Deposit Verification)</h2>
-  <p>We will send two small deposits (under $1) to your bank in 1–2 business days.</p>
+<html><head><meta charset="utf-8"><title>MR46 Logistics – Add Bank for ACH</title>
+<style>
+body{font-family:Arial;max-width:520px;margin:40px auto;padding:20px;background:#f0f8ff;text-align:center}
+h2{color:#006241}
+input,button{width:100%;padding:14px;margin:10px 0;font-size:16px;border-radius:8px;border:1px solid #ccc}
+button{background:#006241;color:white;border:none;cursor:pointer;font-weight:bold}
+button:disabled{background:#999}
+#status{margin-top:20px;padding:15px;border-radius:8px;display:none;font-weight:bold}
+.success{background:#d4edda;color:#155724}.error{background:#f8d7da;color:#721c24}
+</style></head><body>
+<h2>MR46 Logistics LLC<br>Add Bank Account for ACH Payments</h2>
+<form id="f">
+<input placeholder="Full Name" id="n" required>
+<input type="email" placeholder="Email" id="e" required>
+<input placeholder="Routing Number (9 digits)" id="r" maxlength="9" required>
+<input placeholder="Account Number" id="a" required>
+<label><input type="checkbox" id="c" required> I authorize micro-deposits for verification</label>
+<button type="submit" id="b" disabled>Send Real Micro-Deposits</button>
+</form>
+<div id="status"></div>
 
-  <form id="f">
-    <input type="text" placeholder="Full Name" id="n" required>
-    <input type="email" placeholder="Email" id="e" required>
-    <input type="text" placeholder="Routing Number (9 digits)" id="r" maxlength="9" required>
-    <input type="text" placeholder="Account Number" id="a" required>
-    <div class="small">
-      <label><input type="checkbox" id="c" required> I authorize micro-deposits and a small withdrawal</label>
-    </div>
-    <button type="submit" id="b" disabled>Create Verification Link</button>
-  </form>
-  <div id="status"></div>
-
-  <script>
-    document.getElementById('c').onchange = () => {
-      document.getElementById('b').disabled = !document.getElementById('c').checked;
-    };
-
-    document.getElementById('f').onsubmit = e => {
-      e.preventDefault();
-      document.getElementById('b').textContent = 'Done!';
-
-      const data = {
-        name: document.getElementById('n').value.trim(),
-        email: document.getElementById('e').value.trim(),
-        routing: document.getElementById('r').value.trim(),
-        account: document.getElementById('a').value.trim()
-      };
-
-      // Encode data safely into URL
-      const encoded = btoa(JSON.stringify(data));
-      const verifyUrl = location.origin + location.pathname.replace('index.html','') + 'verify.html?data=' + encoded;
-
-      document.getElementById('status').innerHTML = `
-        <div class="success">
-          <strong>Success!</strong><br><br>
-          Your bank has been queued for micro-deposit verification.<br><br>
-          Two tiny deposits will appear in your bank in 1–2 business days.<br><br>
-          <a href="${verifyUrl}" target="_blank" style="color:#006241;font-weight:bold">
-            → Click here to verify the amounts when you see them
-          </a><br><br>
-          We also emailed this link to: <strong>${data.email}</strong>
-        </div>
-      `;
-      document.getElementById('status').style.display = 'block';
-    };
-  </script>
-</body>
-</html>
+<script>
+document.getElementById('c').onchange=()=>document.getElementById('b').disabled=!document.getElementById('c').checked;
+document.getElementById('f').onsubmit=async e=>{
+  e.preventDefault();
+  document.getElementById('b').textContent='Sending…';
+  const d={name:document.getElementById('n').value,email:document.getElementById('e').value,routing:document.getElementById('r').value,account:document.getElementById('a').value};
+  const r=await fetch('https://square-ach-mr46.up.railway.app/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const j=await r.json();
+  document.getElementById('status').style.display='block';
+  document.getElementById('status').className=j.success?'success':'error';
+  document.getElementById('status').innerHTML=j.success?
+    `<strong>Success!</strong><br>Two real deposits sent to your bank.<br>Check in 1–2 days.<br><br><a href="verify.html" style="color:#006241;font-weight:bold">→ Click here to verify amounts</a>`:
+    `Error: ${j.error}`;
+};
+</script>
+</body></html>
